@@ -21,7 +21,7 @@
     "dev": "babel-node index.js"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "babel": {
     "presets": [
       [
@@ -32,14 +32,6 @@
           },
           "useBuiltIns": "usage",
           "corejs": "3"
-        }
-      ]
-    ],
-    "plugins": [
-      [
-        "@babel/plugin-proposal-decorators",
-        {
-          "decoratorsBeforeExport": true
         }
       ]
     ]
