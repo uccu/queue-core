@@ -1,0 +1,47 @@
+{
+  "name": "queue-core",
+  "version": "1.0.0",
+  "description": "queue server",
+  "main": "index.js",
+  "dependencies": {
+    "chalk": "^4.0.0",
+    "isjsonstring": "^1.0.2"
+  },
+  "devDependencies": {
+    "core-js": "3",
+    "yargs": "^15.3.1",
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/polyfill": "^7.8.7",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/node": "^7.8.7",
+    "@babel/plugin-proposal-decorators": "^7.8.3"
+  },
+  "scripts": {
+    "dev": "babel-node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "babel": {
+    "presets": [
+      [
+        "@babel/env",
+        {
+          "targets": {
+            "node": "12"
+          },
+          "useBuiltIns": "usage",
+          "corejs": "3"
+        }
+      ]
+    ],
+    "plugins": [
+      [
+        "@babel/plugin-proposal-decorators",
+        {
+          "decoratorsBeforeExport": true
+        }
+      ]
+    ]
+  }
+}
