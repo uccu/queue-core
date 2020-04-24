@@ -1,19 +1,26 @@
-import net from 'net'
-import chalk from 'chalk'
+const net = require('net')
+const chalk = require('chalk')
+const { EventEmitter } = require('events');
 
-const client = net.createConnection({ port: 12200 }, () => {
-    console.log('connected');
-    client.write('test msg');
 
-    setTimeout(() => {
-        client.end();
-    }, 5000)
+class client extends EventEmitter {
 
-});
+    constructor() {
+        super();
+        const socket = new net.Socket();
+        Object.defineProperty(this, '_client', {
+            value: socket
+        });
+    }
 
-client.on('data', (data) => {
-    console.log(chalk.green('recieve data') + ':', data.toString());
-});
-client.on('end', () => {
-    console.log('closed');
-});
+
+    start(port = 8879, host = '127.0.0.1') {
+        this._client.connect(port, host, () => {
+            console.log(chalk.cyan('server connected'));
+        });
+        return this;
+    }
+
+}
+
+module.exports = client

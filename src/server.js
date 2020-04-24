@@ -1,28 +1,47 @@
-import net from 'net'
-import chalk from 'chalk'
+
+const net = require('net')
+const chalk = require('chalk')
+const { EventEmitter } = require('events');
 
 
-import Stream from './stream'
-
-
-const server = new net.Server()
-
-server.listen(12200)
-
-
-server.on('close', e => {
-    console.log(chalk.red('server closed'))
-})
-
-
-server.on('connection', socket => {
-    socket.write('connect success');
-    socket.on('data', buffer => new Stream(buffer, socket));
-    socket.on('end', () => {
-        console.log('closed');
-    });
-})
+const Connection = require('./connection')
 
 
 
-console.log(chalk.cyan('server opened'))
+
+class server extends EventEmitter {
+
+    constructor() {
+
+        super();
+        const server = new net.Server();
+        Object.defineProperty(this, '_server', {
+            value: server
+        });
+    }
+
+    start(port = 8879) {
+        this._server.listen(port, () => {
+            console.log(chalk.cyan('server opened'));
+            this.emit('listen');
+        });
+
+        this._server.on('close', () => {
+            console.log(chalk.red('server closed'));
+            this.emit('close');
+        });
+        this._server.on('error', () => {
+            console.log(chalk.red('server errored'));
+            this.emit('error');
+        });
+        this._server.on('connection', socket => {
+            const connection = new Connection(socket);
+            this.emit('connection', connection);
+            connection.on('end', () => console.log('closed'));
+        });
+        return this;
+    }
+}
+
+
+module.exports = server

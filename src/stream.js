@@ -1,57 +1,41 @@
+"use strict";
 
-import isJSONString from 'isjsonstring'
-import Connect from './connect'
-
-
-const STATUS_INIT = 0
-const STATUS_CONNECTED = 0
-const STATUS_CONNECTING = 0
+const def = require('./helper/def');
 
 
 class Stream {
 
+    constructor(buffer, connection) {
 
-    constructor(buffer, socket) {
+        def(this, {
+            buffer, connection
+        })
 
-        this.buffer = buffer
-        this.status = STATUS_INIT
+        const fin = this.getPiece(1) // opcode
 
-
-        const fin = this.getPiece(1, 3) // opcode
-        const ssl = this.getPiece(1, 1, 3) // is ssl
-        const fd = this.getPiece(1, 1, 4) // need feedback
-        const ol = this.getPiece(1, 1, 5) // has only id
+        this.type = fin;
 
         if (fin === 0) {
-            // rejected
-            console.log(chalk.yellow('client rejected connection'));
-            socket.end(); return;
+            // reject
         } else if (fin === 1) {
-            // connecting
-            return new Connect(this.buffer.slice(2), socket);
+            // register
         } else if (fin === 2) {
-            // send text
-            return new Text(this.buffer.slice(2), socket);
+            // lock
+            this.lockKey = buffer.slice(1).toString();
         } else if (fin === 3) {
-            // send binary
-            return new Binary(this.buffer.slice(2), socket);
+            // unlock
+            this.lockKey = buffer.slice(1).toString();
         } else if (fin === 4) {
-            // ping
+            // wait
+            this.lockKey = buffer.slice(1).toString();
         } else if (fin === 5) {
-            // pong
+            // ping
         } else if (fin === 6) {
-            // check
-        } else {
-            console.log(chalk.yellow('undefined opcode'));
-            socket.end(); return;
+            // pong
+        } else if (fin === 7) {
+            // reply
         }
 
-        data = data.toString()
-        if (!isJSONString(data)) return
-
-        data.type
-
-        console.log(chalk.green('recieve data') + ':', data.toString());
     }
 
 
@@ -62,6 +46,19 @@ class Stream {
 
 }
 
+def(Stream, {
+    TYPE_REJECT: 0,
+    TYPE_REGISTER: 1,
+    TYPE_LOCK: 2,
+    TYPE_UNLOCK: 3,
+    TYPE_WAIT: 4,
+    TYPE_PING: 5,
+    TYPE_PONG: 6,
+    TYPE_REPLY: 7,
+    TYPE_REBOT: 7,
+    TYPE_ERROR: -1
+});
 
 
-export default Stream
+
+module.exports = Stream;

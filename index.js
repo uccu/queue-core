@@ -1,1 +1,1 @@
-import './src/server'
+module.exports = require('./src/core')
