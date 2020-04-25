@@ -33,7 +33,7 @@ class Lock {
         const nextConnection = this.list.shift();
         if (nextConnection) {
             clearTimeout(this._);
-            nextConnection.r(true);
+            nextConnection(true);
             return true;
         }
 
@@ -43,7 +43,12 @@ class Lock {
 
 
     wait() {
-        return this.lock() || new promise(r => this.list.push(r)).then(this.lock.bind(this));
+        const result = this.lock();
+        if (!result) {
+            return new promise(r => this.list.push(r));
+        }
+
+        return promise.resolve(true);
     }
 }
 

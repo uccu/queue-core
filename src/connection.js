@@ -1,11 +1,11 @@
 
 const { EventEmitter } = require('events');
-const Stream = require('./stream')
 
-const def = require('./helper/def')
+const def = require('./helper/def');
 
-const { ms } = require('./memory')
-
+const { ms } = require('./memory');
+const Request = require('./request');
+const Response = require('./response');
 
 class Connection extends EventEmitter {
 
@@ -15,50 +15,54 @@ class Connection extends EventEmitter {
         console.log('one connection connected')
         this.STATUS = Connection.STATUS_INITED;
         socket.on('data', buffer => {
-            const stream = new Stream(buffer, this);
+            const req = new Request(buffer);
+            const res = new Response(socket);
 
-            if (stream.type === Stream.TYPE_ERROR) {
-                socket.end();
-                this.emit('error', stream.error);
-            } else if (stream.type === Stream.TYPE_REGISTER) {
+            if (req.opcode === Request.OPCODE.ERROR) {
+                res.end();
+                this.emit('error', req.error, req, res);
+            } else if (req.opcode === Request.OPCODE.REGISTER) {
                 if (this.STATUS >= Connection.STATUS_REGISTERED) {
-                    socket.write(new Buffer.from([0]));
+                    res.send(Response.OPCODE.REJECT, req.id);
                 } else {
                     this.STATUS = Connection.STATUS_REGISTERED;
-                    socket.write(new Buffer.from([7]));
-                    this.emit('register', stream);
+                    res.send(Response.OPCODE.REPLY, req.id);
+                    this.emit('register', req, res);
                 }
 
-            } else if (stream.type === Stream.TYPE_LOCK) {
-                const status = ms.lock(stream.lockName);
+            } else if (req.opcode === Request.OPCODE.LOCK) {
+                const status = ms.lock(req.data);
                 if (status) {
-                    socket.write(new Buffer.from([7]));
+                    res.send(Response.OPCODE.REPLY, req.id);
                 } else {
-                    socket.write(new Buffer.from([0]));
+                    res.send(Response.OPCODE.REJECT, req.id);
                 }
-                this.emit('lock', stream);
-            } else if (stream.type === Stream.TYPE_UNLOCK) {
-                const status = ms.unlock(stream.lockName);
+                this.emit('lock', req, res);
+            } else if (req.opcode === Request.OPCODE.UNLOCK) {
+                const status = ms.unlock(req.data);
                 if (status) {
-                    socket.write(new Buffer.from([7]));
+                    res.send(Response.OPCODE.REPLY, req.id);
                 } else {
-                    socket.write(new Buffer.from([0]));
+                    res.send(Response.OPCODE.REJECT, req.id);
                 }
-                this.emit('unlock', stream);
-            } else if (stream.type === Stream.TYPE_WAIT) {
-                this.emit('beforeWait', stream);
-                ms.wait(stream.lockName).then(status => {
+                this.emit('unlock', req, res);
+            } else if (req.opcode === Request.OPCODE.WAIT) {
+                this.emit('beforeWait', req);
+                ms.wait(req.data).then(status => {
                     if (status) {
-                        socket.write(new Buffer.from([7]));
+                        res.send(Response.OPCODE.REPLY, req.id);
                     } else {
-                        socket.write(new Buffer.from([0]));
+                        res.send(Response.OPCODE.REJECT, req.id);
                     }
-                    this.emit('wait', stream);
+                    this.emit('wait', req, res);
                 });
-            } else if (stream.type === Stream.TYPE_PING) {
-                socket.write(new Buffer.from([6]));
+            } else if (req.opcode === Request.OPCODE.PING) {
+                res.send(Response.OPCODE.PONG, req.id);
             }
         });
+        socket.on('error', e => {
+            console.error(e);
+        })
         socket.on('end', () => {
             this.STATUS = Connection.STATUS_CLOSED;
             this.emit('end');

@@ -6,8 +6,7 @@
   "dependencies": {
     "bluebird": "^3.7.2",
     "chalk": "^4.0.0",
-    "isjsonstring": "^1.0.2",
-    "koa-convert": "^1.2.0"
+    "isjsonstring": "^1.0.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",

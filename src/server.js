@@ -38,6 +38,7 @@ class server extends EventEmitter {
             const connection = new Connection(socket);
             this.emit('connection', connection);
             connection.on('end', () => console.log('closed'));
+            connection.on('error', e => console.error(e));
         });
         return this;
     }
