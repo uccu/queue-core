@@ -1,6 +1,4 @@
 
-const _ = require('lodash')
-
 class Request {
 
     constructor(buffer) {

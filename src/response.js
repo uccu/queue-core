@@ -1,8 +1,5 @@
 "use strict";
 
-const _ = require('lodash')
-
-
 class Response {
 
     constructor(socket) {

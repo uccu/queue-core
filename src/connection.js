@@ -1,8 +1,6 @@
 
 const { EventEmitter } = require('events');
 
-const def = require('./helper/def');
-
 const { ms } = require('./memory');
 const Request = require('./request');
 const Response = require('./response');
@@ -11,7 +9,7 @@ class Connection extends EventEmitter {
 
     constructor(socket) {
         super();
-        def(this, { socket });
+        this.socket = socket;
         console.log('one connection connected')
         this.STATUS = Connection.STATUS_INITED;
         socket.on('data', buffer => {
